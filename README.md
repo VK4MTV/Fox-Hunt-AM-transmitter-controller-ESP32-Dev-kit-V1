@@ -9,3 +9,18 @@ Again, has not been tested in the field yet, has been tested with a loundspeaker
 but first, will explore all avenues first for further refinement in the Audio engine to see if I can keep this setup at the lowest component count as possible, ie: controller -> Modulator Mosfet -> Transmitter Final.
 
 There will be a later version coming a little later that will be suitabke for FM AND SSB transceivers as well, this will involve modifications to the Aidio engine to drive the ESP32 DAC, and replace the morse pulse with a morse tone.
+
+
+##########################################################################################
+
+PREGRESS REPORT
+
+##########################################################################################
+
+15/04/2026 UPDATE: Some further work has been done to improve the playback quality, also there has beeh support added for SD card support to allow more and larger sound files to be uploaded, this goes in line withs with added support for playback of unsigned 8 bit WAV files, since True PCM will provice cleaner audio, and since there is no apps available for iPhone that can pruduce 4 Bit ADPCM, you can now with this later version use a smartphone to do all your playlist upload and configurations in the field, you will no longer need a laptop, however without an SD card, you only have 1.4MB of storage onboard the ESP32 so that can fill up very quickly, recommended to get an SD card for more capacity, make sure its no larger than 32GB!
+
+This code has not been tested yet, I will later provide a review when I test it.
+
+Cheers and have fun with it.
+
+Cheers, Christopher O'Reilly VK4MTV
