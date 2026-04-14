@@ -222,8 +222,56 @@ void audioTask(void *pvParameters) {
 // ====================== WEB UI (copy full HTML from previous message) ======================
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html><head><title>Fox Hunt AM PWM</title>
-<!-- Paste the full HTML from the earlier full version here (the one with SD prefix support) -->
-</body></html>)rawliteral";
+<style>
+  body { background:#000; color:#0f0; font-family:'Courier New', monospace; padding:20px; }
+  h2 { border-bottom: 2px solid #040; }
+  .box { margin:15px 0; padding:15px; border:1px solid #0f0; background:#010; }
+  .item { display:flex; align-items:center; background:#010; border:1px solid #030; margin:5px 0; padding:5px; }
+  button { background:#020; color:#0f0; border:1px solid #0f0; cursor:pointer; padding:6px; margin:2px; }
+  button:hover { background:#0f0; color:#000; }
+  input { background:#000; color:#0f0; border:1px solid #0f0; padding:5px; }
+  .save-btn { background:#040; border-color:#0f0; font-weight:bold; width:100%; font-size:16px; margin:10px 0; }
+</style></head><body>
+  <div id="mem" style="border:1px solid #040; padding:10px;">STORAGE: ...</div>
+  <h2>[ PLAYLIST ]</h2><div id="playlist"></div>
+  <button class="save-btn" onclick="saveAndPlay()">SAVE & START BROADCAST</button>
+  <div class="box">[ MORSE ] <input id="mmsg" placeholder="VK4MTV FOX 1"><button onclick="addM()">ADD</button></div>
+  <div class="box">[ UPLOAD WAV to LittleFS ] <input type="file" id="fi"><button onclick="up()">UPLOAD</button><div id="prg"></div></div>
+  <div class="box">[ SILENCE sec ] <input type="number" id="sec" min="1"><button onclick="addS()">ADD</button></div>
+  <h2>[ FILES ]</h2><div id="files"></div>
+  <button style="color:red; border-color:red;" onclick="clearPL()">CLEAR PLAYLIST</button>
+<script>
+  function load() {
+    fetch('/api/status').then(r=>r.json()).then(d=>{
+      document.getElementById('mem').innerText = d.storage;
+      let p = ''; d.playlist.forEach((f,i)=> p += `<div class="item"><button onclick="act('move',${i},-1)">▲</button><button onclick="act('move',${i},1)">▼</button><button onclick="act('remove',${i})">X</button> ${f}</div>`);
+      document.getElementById('playlist').innerHTML = p || 'Empty';
+      let fstr = ''; d.files.forEach(n => {
+        let prefix = n.startsWith('SD:') ? '💾 ' : '';
+        fstr += `<div class="item"><button onclick="act('add','${n}')">ADD</button> ${prefix}${n} <button onclick="act('del-disk','${n}')">DEL</button></div>`;
+      });
+      document.getElementById('files').innerHTML = fstr;
+    });
+  }
+  function act(a,i,d=0) { 
+    let url = `/api/${a}?i=${i}&d=${d}`;
+    if (a==='add' || a==='del-disk') url += `&f=${encodeURIComponent(i)}`;
+    fetch(url).then(load); 
+  }
+  function addM() { let m=document.getElementById('mmsg').value; if(m) fetch('/api/add?f=M:'+encodeURIComponent(m)).then(load); }
+  function addS() { let s=document.getElementById('sec').value; if(s) fetch('/api/add?f='+s).then(load); }
+  function saveAndPlay() { fetch('/api/save-play').then(()=>{load(); alert('Playlist saved and broadcast started!');}); }
+  function up() {
+    let fi=document.getElementById('fi'); if(!fi.files.length) return;
+    let fd=new FormData(); fd.append("data", fi.files[0], fi.files[0].name);
+    let x=new XMLHttpRequest(); x.open("POST","/api/upload");
+    x.upload.onprogress = e => document.getElementById('prg').innerText = Math.round(e.loaded/e.total*100)+"%";
+    x.onload = ()=>{ load(); document.getElementById('prg').innerText='Done'; };
+    x.send(fd);
+  }
+  function clearPL() { if(confirm('Wipe playlist?')) fetch('/api/clear').then(load); }
+  load();
+</script></body></html>)rawliteral";
 
 void setup() {
   Serial.begin(115200);
